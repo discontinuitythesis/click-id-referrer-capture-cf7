@@ -11,7 +11,7 @@ global $wpdb;
 
 $cidrc_table = $wpdb->prefix . 'cidrc_submissions';
 
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Table removal on uninstall.
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping the plugin's own table on uninstall; nothing to cache.
 $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $cidrc_table ) );
 
 delete_option( 'cidrc_settings' );

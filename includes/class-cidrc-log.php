@@ -191,7 +191,7 @@ class CIDRC_Log {
 		$query = 'SELECT * FROM %i' . $where['sql'] . ' ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d';
 		$vals  = array_merge( array( $table ), $where['args'], array( $per_page, $offset ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Placeholders assembled above.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom plugin table; the SQL contains only literal fragments and placeholders, every value goes through $wpdb->prepare().
 		$rows = $wpdb->get_results( $wpdb->prepare( $query, $vals ), ARRAY_A );
 
 		return is_array( $rows ) ? $rows : array();
@@ -210,7 +210,7 @@ class CIDRC_Log {
 		$query = 'SELECT COUNT(*) FROM %i' . $where['sql'];
 		$vals  = array_merge( array( self::table_name() ), $where['args'] );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Placeholders assembled above.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom plugin table; the SQL contains only literal fragments and placeholders, every value goes through $wpdb->prepare().
 		$count = $wpdb->get_var( $wpdb->prepare( $query, $vals ) );
 
 		return (int) $count;

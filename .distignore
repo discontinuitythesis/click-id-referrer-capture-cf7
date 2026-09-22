@@ -1,0 +1,11 @@
+test/
+dist/
+node_modules/
+.wp-env.json
+.git
+.gitignore
+.distignore
+assets/*.png
+package.json
+package-lock.json
+.DS_Store

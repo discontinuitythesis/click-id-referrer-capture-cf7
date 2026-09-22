@@ -29,7 +29,6 @@ class CIDRC_Plugin {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( self::CRON_HOOK, array( 'CIDRC_Log', 'purge' ) );
-		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
 
 		$settings = new CIDRC_Settings();
 		add_action( 'admin_init', array( $settings, 'register' ) );
@@ -42,15 +41,6 @@ class CIDRC_Plugin {
 
 		$cf7 = new CIDRC_CF7();
 		$cf7->init();
-	}
-
-	/**
-	 * Loads the translations. Harmless on WordPress.org, useful elsewhere.
-	 *
-	 * @return void
-	 */
-	public function load_textdomain() {
-		load_plugin_textdomain( 'click-id-referrer-capture-cf7', false, dirname( CIDRC_BASENAME ) . '/languages' );
 	}
 
 	/**

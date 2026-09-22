@@ -97,7 +97,8 @@ function cidrc_get_values() {
 	 * would destroy it, so the raw value is only unslashed here. Every individual
 	 * value taken out of the decoded document is sanitised below instead.
 	 */
-	$raw = wp_unslash( $_COOKIE[ $name ] );
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Percent-encoded JSON; every decoded value is sanitised individually below.
+	$raw = is_string( $_COOKIE[ $name ] ) ? wp_unslash( $_COOKIE[ $name ] ) : '';
 
 	if ( ! is_string( $raw ) || '' === $raw || strlen( $raw ) > 8192 ) {
 		return $empty;
