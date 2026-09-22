@@ -1,0 +1,51 @@
+/* Click ID & Referrer Capture for Contact Form 7, admin styles. */
+
+.cidrc-wrap .cidrc-filters {
+	margin: 1em 0 0.5em;
+	padding: 10px 12px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+}
+
+.cidrc-wrap .cidrc-filters label {
+	margin-right: 4px;
+	font-weight: 600;
+}
+
+.cidrc-wrap .cidrc-filters select,
+.cidrc-wrap .cidrc-filters input[type="date"] {
+	margin-right: 12px;
+}
+
+.cidrc-wrap .cidrc-exports {
+	margin: 0 0 1em;
+}
+
+.cidrc-wrap .cidrc-exports .button {
+	margin-right: 6px;
+}
+
+.cidrc-wrap .column-click_id code,
+.cidrc-wrap .column-email_hash code {
+	font-size: 11px;
+	word-break: break-all;
+}
+
+.cidrc-wrap table.form-table th {
+	width: 260px;
+}
+
+table.cidrc-debug {
+	border-collapse: collapse;
+	margin: 1em 0;
+	width: 100%;
+}
+
+table.cidrc-debug th,
+table.cidrc-debug td {
+	border: 1px solid #c3c4c7;
+	padding: 6px 8px;
+	text-align: left;
+	vertical-align: top;
+	word-break: break-all;
+}
