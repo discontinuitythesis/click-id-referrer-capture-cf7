@@ -29,6 +29,12 @@ class CIDRC_Plugin {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( self::CRON_HOOK, array( 'CIDRC_Log', 'purge' ) );
+		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
+
+		// Runs on every request type, including the Contact Form 7 REST submission and
+		// WP-Cron, because an update by ZIP upload or auto-update never fires the
+		// activation hook. It returns straight away once the schema is current.
+		add_action( 'plugins_loaded', array( 'CIDRC_Log', 'maybe_install' ) );
 
 		$settings = new CIDRC_Settings();
 		add_action( 'admin_init', array( $settings, 'register' ) );
@@ -44,13 +50,21 @@ class CIDRC_Plugin {
 	}
 
 	/**
-	 * Runs the schema check and makes sure the purge event exists.
+	 * Loads the translations. Harmless on WordPress.org, useful elsewhere.
+	 *
+	 * @return void
+	 */
+	public function load_textdomain() {
+		// phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound -- GitHub ZIP installs also need the plugin-local translation path.
+		load_plugin_textdomain( 'click-id-referrer-capture-cf7', false, dirname( CIDRC_BASENAME ) . '/languages' );
+	}
+
+	/**
+	 * Makes sure the purge event exists. The schema check runs on plugins_loaded.
 	 *
 	 * @return void
 	 */
 	public function admin_init() {
-		CIDRC_Log::maybe_install();
-
 		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::CRON_HOOK );
 		}
@@ -80,14 +94,15 @@ class CIDRC_Plugin {
 		);
 
 		$config = array(
-			'cookieName'         => cidrc_cookie_name(),
-			'cookieDays'         => cidrc_cookie_days(),
-			'params'             => cidrc_captured_params(),
-			'fields'             => cidrc_hidden_fields(),
-			'storageMode'        => cidrc_get_setting( 'storage_mode', 'always' ),
-			'consentCookieName'  => cidrc_get_setting( 'consent_cookie_name', '' ),
-			'consentCookieValue' => cidrc_get_setting( 'consent_cookie_value', '' ),
-			'maxLength'          => 500,
+			'cookieName'          => cidrc_cookie_name(),
+			'cookieDays'          => cidrc_cookie_days(),
+			'params'              => cidrc_captured_params(),
+			'fields'              => cidrc_hidden_fields(),
+			'storageMode'         => cidrc_get_setting( 'storage_mode', 'always' ),
+			'consentCookieName'   => cidrc_get_setting( 'consent_cookie_name', '' ),
+			'consentCookieValue'  => cidrc_get_setting( 'consent_cookie_value', '' ),
+			'maxLength'           => 500,
+			'extendedAttribution' => cidrc_extended_enabled(),
 		);
 
 		wp_add_inline_script( 'cidrc-capture', 'window.cidrcConfig = ' . wp_json_encode( $config ) . ';', 'before' );

@@ -2,9 +2,9 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Click ID & Referrer Capture for Contact Form 7 1.0.0\n"
+"Project-Id-Version: Click ID & Referrer Capture for Contact Form 7 1.2.0\n"
 "Report-Msgid-Bugs-To: https://firepixel.co.uk/wordpress-click-id-capture\n"
-"POT-Creation-Date: 2026-09-22T00:00:00+00:00\n"
+"POT-Creation-Date: 2026-09-24T00:00:00+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,214 +18,251 @@ msgstr ""
 msgid "Enabled"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:41
-#: includes/class-cidrc-admin.php:42
+#: includes/class-cidrc-admin.php:47
 msgid "Click ID Capture"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:62
-#: includes/class-cidrc-admin.php:141
+#: includes/class-cidrc-admin.php:92
+#: includes/class-cidrc-admin.php:171
 msgid "Settings"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:98
+#: includes/class-cidrc-admin.php:128
 msgid "Click ID & Referrer Capture is running and is storing click identifiers in a first-party cookie, but Contact Form 7 is not active, so no form fields are being filled and no submissions are being logged."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:129
+#: includes/class-cidrc-admin.php:159
 msgid "You do not have permission to view this page."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:137
+#: includes/class-cidrc-admin.php:167
 msgid "Click ID & Referrer Capture"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:142
+#: includes/class-cidrc-admin.php:172
 msgid "Submissions"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:174
+#: includes/class-cidrc-admin.php:210
 msgid "Capture and storage"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:179
+#: includes/class-cidrc-admin.php:215
 msgid "Storage mode"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:181
+#: includes/class-cidrc-admin.php:217
 msgid "Always store"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:182
+#: includes/class-cidrc-admin.php:218
 msgid "Wait for consent"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:185
+#: includes/class-cidrc-admin.php:221
 msgid "In wait for consent mode the values are held in the browser session only, and the cookie is written after consent is granted."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:188
+#: includes/class-cidrc-admin.php:224
 msgid "Cookie lifetime in days"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:188
+#: includes/class-cidrc-admin.php:224
 msgid "Between 1 and 400 days. Google Ads offline conversions accept a click up to 90 days old by default."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:190
+#: includes/class-cidrc-admin.php:226
 msgid "Consent cookie name"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:190
+#: includes/class-cidrc-admin.php:226
 msgid "Optional. Examples: cookieyes-consent for CookieYes, CookieConsent for Cookiebot, cmplz_marketing for Complianz."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:192
+#: includes/class-cidrc-admin.php:228
 msgid "Consent cookie contains"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:192
+#: includes/class-cidrc-admin.php:228
 msgid "Optional. The cookie is written once the consent cookie contains this text. Examples: advertisement:yes for CookieYes, marketing:true for Cookiebot, allow for Complianz."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:196
+#: includes/class-cidrc-admin.php:230
+msgid "Extended attribution"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:230
+msgid "Records first and last touch for every UTM, the referrer, landing page and channel of each touch, and the page the form was submitted from. Adds these to the email summary, the submission log, the full CSV and the webhook."
+msgstr ""
+
+#: includes/class-cidrc-admin.php:234
 msgid "Contact Form 7"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:199
+#: includes/class-cidrc-admin.php:237
 msgid "Append attribution summary to every Contact Form 7 mail body automatically"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:199
+#: includes/class-cidrc-admin.php:237
 msgid "Leave this off if you prefer to place the [cidrc_summary] mail tag yourself."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:201
+#: includes/class-cidrc-admin.php:239
 msgid "Keep a submission log"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:201
+#: includes/class-cidrc-admin.php:239
 msgid "Stores one row per sent form, with hashed contact details, so that you can export offline conversions later."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:203
+#: includes/class-cidrc-admin.php:241
 msgid "Log retention in days"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:203
+#: includes/class-cidrc-admin.php:241
 msgid "Rows older than this are deleted once a day. Set 0 to keep rows for ever."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:207
+#: includes/class-cidrc-admin.php:245
 msgid "Offline conversions"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:210
+#: includes/class-cidrc-admin.php:248
 msgid "Default conversion name"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:210
+#: includes/class-cidrc-admin.php:248
 msgid "This has to match the conversion action name in Google Ads or Microsoft Advertising exactly."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:212
+#: includes/class-cidrc-admin.php:250
 msgid "Default conversion value"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:212
+#: includes/class-cidrc-admin.php:250
 msgid "A number, for example 250. Use 0 if you do not report a value."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:214
+#: includes/class-cidrc-admin.php:252
 msgid "Currency code"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:214
+#: includes/class-cidrc-admin.php:252
 msgid "Three letters, for example GBP, EUR or USD."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:216
+#: includes/class-cidrc-admin.php:254
 msgid "Per form overrides"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:216
+#: includes/class-cidrc-admin.php:254
 msgid "One line per form, in the format: form ID | conversion name | conversion value. The value is optional."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:220
-msgid "Webhook"
+#: includes/class-cidrc-admin.php:258
+msgid "Consent fallback"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:223
-msgid "Webhook URL"
+#: includes/class-cidrc-admin.php:260
+msgid "Leave blank (unspecified)"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:223
-msgid "Optional. Each sent form is posted as JSON to this address, for example an n8n, Make or Zapier webhook."
+#: includes/class-cidrc-admin.php:261
+#: includes/class-cidrc-list-table.php:221
+msgid "Granted"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:225
-msgid "Webhook secret"
+#: includes/class-cidrc-admin.php:262
+#: includes/class-cidrc-list-table.php:225
+msgid "Denied"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:225
-msgid "Optional. Sent as the X-CIDRC-Secret request header so that your endpoint can reject anything else."
+#: includes/class-cidrc-admin.php:265
+msgid "Used only when no Google Consent Mode signal is found on the page at submission. Leave blank unless your consent banner records this consent for every lead."
 msgstr ""
 
-#: includes/class-cidrc-admin.php:227
-msgid "Include the raw email address in the webhook"
+#: includes/class-cidrc-admin.php:268
+msgid "Include GBRAID and WBRAID columns in the Google Ads export"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:227
-msgid "Off by default. Only turn this on when your privacy notice covers sending personal data to that endpoint, and only when the endpoint is under your control."
-msgstr ""
-
-#: includes/class-cidrc-admin.php:244
-msgid "Reference"
-msgstr ""
-
-#: includes/class-cidrc-admin.php:245
-msgid "Hidden fields added to every Contact Form 7 form:"
-msgstr ""
-
-#: includes/class-cidrc-admin.php:253
-msgid "Mail tag: [cidrc_summary]. Shortcode for testing: [cidrc_debug]. Javascript API: window.cidrc.getValues() and window.cidrc.consentGranted()."
-msgstr ""
-
-#: includes/class-cidrc-admin.php:269
-msgid "From"
+#: includes/class-cidrc-admin.php:268
+msgid "Adds GBRAID and WBRAID columns. Google's file import template documents Google Click ID only; enable this if your import route accepts them."
 msgstr ""
 
 #: includes/class-cidrc-admin.php:272
-msgid "To"
+msgid "Webhook"
 msgstr ""
 
 #: includes/class-cidrc-admin.php:275
-#: includes/class-cidrc-list-table.php:51
-msgid "Form"
+msgid "Webhook URL"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:275
+msgid "Optional. Each sent form is posted as JSON to this address, for example an n8n, Make or Zapier webhook."
 msgstr ""
 
 #: includes/class-cidrc-admin.php:277
+msgid "Webhook secret"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:277
+msgid "Optional. Sent as the X-CIDRC-Secret request header so that your endpoint can reject anything else."
+msgstr ""
+
+#: includes/class-cidrc-admin.php:279
+msgid "Include the raw email address in the webhook"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:279
+msgid "Off by default. Only turn this on when your privacy notice covers sending personal data to that endpoint, and only when the endpoint is under your control."
+msgstr ""
+
+#: includes/class-cidrc-admin.php:296
+msgid "Reference"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:297
+msgid "Hidden fields added to every Contact Form 7 form:"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:311
+msgid "Mail tag: [cidrc_summary]. Shortcode for testing: [cidrc_debug]. Javascript API: window.cidrc.getValues(), window.cidrc.readConsent() and window.cidrc.consentGranted()."
+msgstr ""
+
+#: includes/class-cidrc-admin.php:327
+msgid "From"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:330
+msgid "To"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:333
+#: includes/class-cidrc-list-table.php:59
+msgid "Form"
+msgstr ""
+
+#: includes/class-cidrc-admin.php:335
 msgid "All forms"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:285
+#: includes/class-cidrc-admin.php:343
 msgid "Filter"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:290
+#: includes/class-cidrc-admin.php:348
 msgid "Export Google Ads offline conversions CSV"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:291
+#: includes/class-cidrc-admin.php:349
 msgid "Export Microsoft Ads offline conversions CSV"
 msgstr ""
 
-#: includes/class-cidrc-admin.php:292
+#: includes/class-cidrc-admin.php:350
 msgid "Full log CSV"
 msgstr ""
 
-#: includes/class-cidrc-cf7.php:104
+#: includes/class-cidrc-cf7.php:110
 msgid "Attribution captured by Click ID & Referrer Capture"
 msgstr ""
 
@@ -233,58 +270,98 @@ msgstr ""
 msgid "You do not have permission to export submissions."
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:50
+#: includes/class-cidrc-list-table.php:58
 msgid "Date"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:52
+#: includes/class-cidrc-list-table.php:60
 msgid "Click ID"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:53
+#: includes/class-cidrc-list-table.php:61
+msgid "Consent"
+msgstr ""
+
+#: includes/class-cidrc-list-table.php:62
 msgid "Source / medium / campaign"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:54
+#: includes/class-cidrc-list-table.php:66
+msgid "Attribution"
+msgstr ""
+
+#: includes/class-cidrc-list-table.php:72
 msgid "Landing page"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:55
+#: includes/class-cidrc-list-table.php:73
 msgid "Referrer"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:56
+#: includes/class-cidrc-list-table.php:74
 msgid "Email hash"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:96
+#: includes/class-cidrc-list-table.php:124
 msgid "No submissions have been logged yet."
 msgstr ""
 
+#: includes/class-cidrc-list-table.php:169
 #. translators: %d: Contact Form 7 form identifier.
-#: includes/class-cidrc-list-table.php:141
 msgid "Form %d"
 msgstr ""
 
-#: includes/class-cidrc-list-table.php:162
-#: includes/class-cidrc-list-table.php:191
+#: includes/class-cidrc-list-table.php:190
+#: includes/class-cidrc-list-table.php:257
+#: includes/class-cidrc-list-table.php:287
 msgid "None"
 msgstr ""
 
-#: includes/class-cidrc-plugin.php:142
+#: includes/class-cidrc-list-table.php:204
+#: includes/class-cidrc-list-table.php:228
+msgid "Unspecified"
+msgstr ""
+
+#: includes/class-cidrc-list-table.php:208
+#. translators: 1: ad user data consent, 2: ad personalisation consent. Each is Granted, Denied or Unspecified.
+msgid "Data: %1$s · Pers.: %2$s"
+msgstr ""
+
+#: includes/class-cidrc-plugin.php:146
 msgid "Field"
 msgstr ""
 
-#: includes/class-cidrc-plugin.php:143
+#: includes/class-cidrc-plugin.php:147
+#: includes/extended.php:323
 msgid "First touch"
 msgstr ""
 
-#: includes/class-cidrc-plugin.php:144
+#: includes/class-cidrc-plugin.php:148
+#: includes/extended.php:327
 msgid "Last touch"
 msgstr ""
 
-#: includes/class-cidrc-plugin.php:148
+#: includes/class-cidrc-plugin.php:152
 msgid "Nothing has been captured for this visitor yet."
+msgstr ""
+
+#: includes/extended.php:280
+#. translators: %s: utm_term value.
+msgid "term: %s"
+msgstr ""
+
+#: includes/extended.php:285
+#. translators: %s: utm_content value.
+msgid "content: %s"
+msgstr ""
+
+#: includes/extended.php:290
+#. translators: %s: landing page path.
+msgid "landed %s"
+msgstr ""
+
+#: includes/extended.php:316
+msgid "Form page"
 msgstr ""
 
 #: includes/formatting.php:18
@@ -359,11 +436,19 @@ msgstr ""
 msgid "Last seen"
 msgstr ""
 
+#: includes/formatting.php:36
+msgid "Ad user data consent"
+msgstr ""
+
+#: includes/formatting.php:37
+msgid "Ad personalisation consent"
+msgstr ""
+
+#: includes/formatting.php:226
 #. translators: 1: first touch value, 2: last touch value.
-#: includes/formatting.php:185
 msgid "%1$s (first touch), %2$s (last touch)"
 msgstr ""
 
-#: includes/formatting.php:197
+#: includes/formatting.php:253
 msgid "No attribution data was captured for this visitor."
 msgstr ""

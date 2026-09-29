@@ -97,8 +97,8 @@ function cidrc_get_values() {
 	 * would destroy it, so the raw value is only unslashed here. Every individual
 	 * value taken out of the decoded document is sanitised below instead.
 	 */
-	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Percent-encoded JSON; every decoded value is sanitised individually below.
-	$raw = is_string( $_COOKIE[ $name ] ) ? wp_unslash( $_COOKIE[ $name ] ) : '';
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Decode the bounded JSON first; sanitise every extracted value below.
+	$raw = wp_unslash( $_COOKIE[ $name ] );
 
 	if ( ! is_string( $raw ) || '' === $raw || strlen( $raw ) > 8192 ) {
 		return $empty;
@@ -201,20 +201,45 @@ function cidrc_get_setting( $key, $default = '' ) {
  */
 function cidrc_hidden_fields() {
 	return array(
-		'cidrc_gclid'        => 'gclid',
-		'cidrc_gbraid'       => 'gbraid',
-		'cidrc_wbraid'       => 'wbraid',
-		'cidrc_msclkid'      => 'msclkid',
-		'cidrc_fbclid'       => 'fbclid',
-		'cidrc_ttclid'       => 'ttclid',
-		'cidrc_utm_source'   => 'utm_source',
-		'cidrc_utm_medium'   => 'utm_medium',
-		'cidrc_utm_campaign' => 'utm_campaign',
-		'cidrc_utm_term'     => 'utm_term',
-		'cidrc_utm_content'  => 'utm_content',
-		'cidrc_referrer'     => 'first_referrer',
-		'cidrc_landing_page' => 'first_landing_page',
-		'cidrc_first_seen'   => 'first_seen',
-		'cidrc_last_touch'   => 'last_touch',
+		'cidrc_gclid'              => 'gclid',
+		'cidrc_gbraid'             => 'gbraid',
+		'cidrc_wbraid'             => 'wbraid',
+		'cidrc_msclkid'            => 'msclkid',
+		'cidrc_fbclid'             => 'fbclid',
+		'cidrc_ttclid'             => 'ttclid',
+		'cidrc_utm_source'         => 'utm_source',
+		'cidrc_utm_medium'         => 'utm_medium',
+		'cidrc_utm_campaign'       => 'utm_campaign',
+		'cidrc_utm_term'           => 'utm_term',
+		'cidrc_utm_content'        => 'utm_content',
+		'cidrc_referrer'           => 'first_referrer',
+		'cidrc_landing_page'       => 'first_landing_page',
+		'cidrc_first_seen'         => 'first_seen',
+		'cidrc_last_touch'         => 'last_touch',
+		'cidrc_ad_user_data'       => 'ad_user_data',
+		'cidrc_ad_personalization' => 'ad_personalization',
+	);
+}
+
+/**
+ * Reports whether the extended attribution setting is on.
+ *
+ * @return bool True when extended attribution is recorded.
+ */
+function cidrc_extended_enabled() {
+	return (bool) cidrc_get_setting( 'extended_attribution', 0 );
+}
+
+/**
+ * Returns the hidden fields added only when extended attribution is on.
+ *
+ * @return array Map of field name to source key.
+ */
+function cidrc_extended_fields() {
+	return array(
+		'cidrc_form_page'       => 'form_page',
+		'cidrc_form_page_title' => 'form_page_title',
+		'cidrc_touch_first'     => 'touch_first',
+		'cidrc_touch_last'      => 'touch_last',
 	);
 }

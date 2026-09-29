@@ -20,6 +20,13 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 	const SLUG = 'cidrc';
 
 	/**
+	 * Hook suffix returned when the page is registered.
+	 *
+	 * @var string
+	 */
+	protected $hook = '';
+
+	/**
 	 * Registers the admin hooks.
 	 *
 	 * @return void
@@ -37,13 +44,36 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 	 * @return void
 	 */
 	public function add_page() {
-		add_options_page(
-			__( 'Click ID Capture', 'click-id-referrer-capture-cf7' ),
-			__( 'Click ID Capture', 'click-id-referrer-capture-cf7' ),
-			'manage_options',
-			self::SLUG,
-			array( $this, 'render' )
-		);
+		$title = __( 'Click ID Capture', 'click-id-referrer-capture-cf7' );
+
+		// Sits under the Contact Form 7 "Contact" menu, next to the forms it works
+		// with. Falls back to Settings when Contact Form 7 is not active.
+		if ( self::under_cf7() ) {
+			$this->hook = add_submenu_page( 'wpcf7', $title, $title, 'manage_options', self::SLUG, array( $this, 'render' ) );
+		} else {
+			$this->hook = add_options_page( $title, $title, 'manage_options', self::SLUG, array( $this, 'render' ) );
+		}
+	}
+
+	/**
+	 * Whether the page lives under the Contact Form 7 menu.
+	 *
+	 * @return bool True when Contact Form 7 is active.
+	 */
+	public static function under_cf7() {
+		return CIDRC_CF7::is_active();
+	}
+
+	/**
+	 * Admin URL of the plugin page, wherever it is registered.
+	 *
+	 * @param array $args Extra query arguments.
+	 * @return string URL.
+	 */
+	public static function page_url( $args = array() ) {
+		$base = self::under_cf7() ? 'admin.php' : 'options-general.php';
+
+		return add_query_arg( array_merge( array( 'page' => self::SLUG ), $args ), admin_url( $base ) );
 	}
 
 	/**
@@ -57,7 +87,7 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 			$links = array();
 		}
 
-		$url = admin_url( 'options-general.php?page=' . self::SLUG );
+		$url = self::page_url();
 
 		array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'click-id-referrer-capture-cf7' ) . '</a>' );
 
@@ -71,7 +101,7 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 	 * @return void
 	 */
 	public function enqueue( $hook ) {
-		if ( 'settings_page_' . self::SLUG !== $hook ) {
+		if ( ! $this->hook || $this->hook !== $hook ) {
 			return;
 		}
 
@@ -90,7 +120,7 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 
-		if ( $screen && ! in_array( $screen->id, array( 'plugins', 'settings_page_' . self::SLUG ), true ) ) {
+		if ( $screen && ! in_array( $screen->id, array( 'plugins', $this->hook ), true ) ) {
 			return;
 		}
 
@@ -142,7 +172,7 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 			'submissions' => __( 'Submissions', 'click-id-referrer-capture-cf7' ),
 		) as $slug => $label ) {
 			$class = ( $slug === $tab ) ? 'nav-tab nav-tab-active' : 'nav-tab';
-			$url   = admin_url( 'options-general.php?page=' . self::SLUG . '&tab=' . $slug );
+			$url   = self::page_url( array( 'tab' => $slug ) );
 
 			echo '<a class="' . esc_attr( $class ) . '" href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>';
 		}
@@ -166,6 +196,12 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 	protected function render_settings() {
 		$settings = CIDRC_Settings::get_all();
 		$option   = CIDRC_Settings::OPTION;
+
+		// WordPress only prints the "Settings saved" notice by itself on Settings
+		// screens, so print it here when the page lives under Contact.
+		if ( self::under_cf7() ) {
+			settings_errors();
+		}
 
 		echo '<form method="post" action="' . esc_url( admin_url( 'options.php' ) ) . '">';
 
@@ -191,6 +227,8 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 
 		$this->row_text( $option . '[consent_cookie_value]', __( 'Consent cookie contains', 'click-id-referrer-capture-cf7' ), $settings['consent_cookie_value'], __( 'Optional. The cookie is written once the consent cookie contains this text. Examples: advertisement:yes for CookieYes, marketing:true for Cookiebot, allow for Complianz.', 'click-id-referrer-capture-cf7' ) );
 
+		$this->row_checkbox( $option . '[extended_attribution]', __( 'Extended attribution', 'click-id-referrer-capture-cf7' ), $settings['extended_attribution'], __( 'Records first and last touch for every UTM, the referrer, landing page and channel of each touch, and the page the form was submitted from. Adds these to the email summary, the submission log, the full CSV and the webhook.', 'click-id-referrer-capture-cf7' ) );
+
 		echo '</tbody></table>';
 
 		echo '<h2>' . esc_html__( 'Contact Form 7', 'click-id-referrer-capture-cf7' ) . '</h2>';
@@ -214,6 +252,20 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 		$this->row_text( $option . '[currency]', __( 'Currency code', 'click-id-referrer-capture-cf7' ), $settings['currency'], __( 'Three letters, for example GBP, EUR or USD.', 'click-id-referrer-capture-cf7' ) );
 
 		$this->row_textarea( $option . '[form_overrides]', __( 'Per form overrides', 'click-id-referrer-capture-cf7' ), $settings['form_overrides'], __( 'One line per form, in the format: form ID | conversion name | conversion value. The value is optional.', 'click-id-referrer-capture-cf7' ) );
+
+		$this->row_select(
+			$option . '[consent_fallback]',
+			__( 'Consent fallback', 'click-id-referrer-capture-cf7' ),
+			array(
+				''        => __( 'Leave blank (unspecified)', 'click-id-referrer-capture-cf7' ),
+				'Granted' => __( 'Granted', 'click-id-referrer-capture-cf7' ),
+				'Denied'  => __( 'Denied', 'click-id-referrer-capture-cf7' ),
+			),
+			$settings['consent_fallback'],
+			__( 'Used only when no Google Consent Mode signal is found on the page at submission. Leave blank unless your consent banner records this consent for every lead.', 'click-id-referrer-capture-cf7' )
+		);
+
+		$this->row_checkbox( $option . '[include_braid_columns]', __( 'Include GBRAID and WBRAID columns in the Google Ads export', 'click-id-referrer-capture-cf7' ), $settings['include_braid_columns'], __( 'Adds GBRAID and WBRAID columns. Google\'s file import template documents Google Click ID only; enable this if your import route accepts them.', 'click-id-referrer-capture-cf7' ) );
 
 		echo '</tbody></table>';
 
@@ -245,12 +297,18 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 		echo '<p>' . esc_html__( 'Hidden fields added to every Contact Form 7 form:', 'click-id-referrer-capture-cf7' ) . '</p>';
 		echo '<p>';
 
-		foreach ( array_keys( cidrc_hidden_fields() ) as $field_name ) {
+		$field_names = array_keys( cidrc_hidden_fields() );
+
+		if ( cidrc_extended_enabled() ) {
+			$field_names = array_merge( $field_names, array_keys( cidrc_extended_fields() ) );
+		}
+
+		foreach ( $field_names as $field_name ) {
 			echo '<code>' . esc_html( $field_name ) . '</code> ';
 		}
 
 		echo '</p>';
-		echo '<p>' . esc_html__( 'Mail tag: [cidrc_summary]. Shortcode for testing: [cidrc_debug]. Javascript API: window.cidrc.getValues() and window.cidrc.consentGranted().', 'click-id-referrer-capture-cf7' ) . '</p>';
+		echo '<p>' . esc_html__( 'Mail tag: [cidrc_summary]. Shortcode for testing: [cidrc_debug]. Javascript API: window.cidrc.getValues(), window.cidrc.readConsent() and window.cidrc.consentGranted().', 'click-id-referrer-capture-cf7' ) . '</p>';
 	}
 
 	/**
@@ -262,7 +320,7 @@ class CIDRC_Admin extends CIDRC_Admin_Fields {
 		$filters = $this->current_filters();
 		$forms   = CIDRC_Log::get_forms();
 
-		echo '<form method="get" action="' . esc_url( admin_url( 'options-general.php' ) ) . '" class="cidrc-filters">';
+		echo '<form method="get" action="' . esc_url( admin_url( self::under_cf7() ? 'admin.php' : 'options-general.php' ) ) . '" class="cidrc-filters">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( self::SLUG ) . '" />';
 		echo '<input type="hidden" name="tab" value="submissions" />';
 
