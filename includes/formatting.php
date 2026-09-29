@@ -33,9 +33,50 @@ function cidrc_label_for( $key ) {
 		'first_landing_page' => __( 'First landing page', 'click-id-referrer-capture-cf7' ),
 		'first_seen'         => __( 'First seen', 'click-id-referrer-capture-cf7' ),
 		'last_seen'          => __( 'Last seen', 'click-id-referrer-capture-cf7' ),
+		'ad_user_data'       => __( 'Ad user data consent', 'click-id-referrer-capture-cf7' ),
+		'ad_personalization' => __( 'Ad personalisation consent', 'click-id-referrer-capture-cf7' ),
 	);
 
 	return isset( $labels[ $key ] ) ? $labels[ $key ] : $key;
+}
+
+/**
+ * Normalises a consent value to the spelling the Google Ads import expects.
+ *
+ * Accepts granted or denied in any letter case. Anything else, including an
+ * empty value, is returned as an empty string, which the import reads as unspecified.
+ *
+ * @param mixed $value Raw consent value.
+ * @return string Granted, Denied or an empty string.
+ */
+function cidrc_normalise_consent( $value ) {
+	if ( ! is_scalar( $value ) ) {
+		return '';
+	}
+
+	$value = strtolower( trim( (string) $value ) );
+
+	if ( 'granted' === $value ) {
+		return 'Granted';
+	}
+
+	if ( 'denied' === $value ) {
+		return 'Denied';
+	}
+
+	return '';
+}
+
+/**
+ * Builds the order ID used in exports and the webhook for a log row.
+ *
+ * @param mixed $id Log row identifier.
+ * @return string Order ID such as cidrc-42, or an empty string when there is no row.
+ */
+function cidrc_order_id( $id ) {
+	$id = is_numeric( $id ) ? (int) $id : 0;
+
+	return $id > 0 ? 'cidrc-' . $id : '';
 }
 
 /**
@@ -191,6 +232,21 @@ function cidrc_build_summary( $values ) {
 		}
 
 		$lines[] = cidrc_label_for( $key ) . ': ' . $values[ $key ];
+	}
+
+	$consent = isset( $values['consent'] ) && is_array( $values['consent'] ) ? $values['consent'] : array();
+
+	foreach ( array( 'ad_user_data', 'ad_personalization' ) as $key ) {
+		if ( empty( $consent[ $key ] ) ) {
+			continue;
+		}
+
+		$lines[] = cidrc_label_for( $key ) . ': ' . $consent[ $key ];
+	}
+
+	// Only present when extended attribution is on. See includes/extended.php.
+	if ( ! empty( $values['extended'] ) ) {
+		$lines = array_merge( $lines, cidrc_extended_summary_lines( $values['extended'] ) );
 	}
 
 	if ( empty( $lines ) ) {

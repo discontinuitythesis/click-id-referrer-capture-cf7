@@ -21,6 +21,8 @@ The full documentation, the FAQ and the developer reference live in [`readme.txt
 ```
 php test/check-standards.php        # escaping, sanitising, prepared statements, text domain
 node --test test/capture.test.js    # front-end capture logic in a minimal fake DOM
+php test/export-consent-test.php    # export rows and consent helpers
+php test/extended-test.php          # extended attribution: sanitising, summary, CSV, webhook, log insert
 for f in $(find . -name '*.php'); do php -l "$f"; done
 ```
 

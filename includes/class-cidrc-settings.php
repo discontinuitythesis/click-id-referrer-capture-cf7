@@ -57,20 +57,23 @@ class CIDRC_Settings {
 	 */
 	public static function defaults() {
 		return array(
-			'storage_mode'         => 'always',
-			'cookie_days'          => 90,
-			'consent_cookie_name'  => '',
-			'consent_cookie_value' => '',
-			'auto_append_summary'  => 0,
-			'keep_log'             => 1,
-			'retention_days'       => 90,
-			'conversion_name'      => 'Website Lead',
-			'conversion_value'     => '0',
-			'currency'             => 'GBP',
-			'webhook_url'          => '',
-			'webhook_secret'       => '',
-			'webhook_raw_email'    => 0,
-			'form_overrides'       => '',
+			'storage_mode'          => 'always',
+			'cookie_days'           => 90,
+			'consent_cookie_name'   => '',
+			'consent_cookie_value'  => '',
+			'auto_append_summary'   => 0,
+			'keep_log'              => 1,
+			'retention_days'        => 90,
+			'conversion_name'       => 'Website Lead',
+			'conversion_value'      => '0',
+			'currency'              => 'GBP',
+			'consent_fallback'      => '',
+			'include_braid_columns' => 0,
+			'extended_attribution'  => 0,
+			'webhook_url'           => '',
+			'webhook_secret'        => '',
+			'webhook_raw_email'     => 0,
+			'form_overrides'        => '',
 		);
 	}
 
@@ -127,6 +130,12 @@ class CIDRC_Settings {
 		$clean['auto_append_summary'] = empty( $input['auto_append_summary'] ) ? 0 : 1;
 		$clean['keep_log']            = empty( $input['keep_log'] ) ? 0 : 1;
 		$clean['webhook_raw_email']   = empty( $input['webhook_raw_email'] ) ? 0 : 1;
+
+		$clean['include_braid_columns'] = empty( $input['include_braid_columns'] ) ? 0 : 1;
+		$clean['extended_attribution']  = empty( $input['extended_attribution'] ) ? 0 : 1;
+
+		// Blank, Granted or Denied. Anything else is stored as blank.
+		$clean['consent_fallback'] = isset( $input['consent_fallback'] ) ? cidrc_normalise_consent( sanitize_text_field( $input['consent_fallback'] ) ) : '';
 
 		$clean['conversion_name'] = isset( $input['conversion_name'] ) ? sanitize_text_field( $input['conversion_name'] ) : '';
 

@@ -151,27 +151,26 @@ class CIDRC_Export {
 	 * @return void
 	 */
 	public function export_google() {
-		$args                   = $this->guard();
-		$args['require_google'] = true;
+		$args          = $this->guard();
+		$include_braid = (bool) cidrc_get_setting( 'include_braid_columns', 0 );
+
+		// Without the GBRAID and WBRAID columns only rows with a gclid can be imported.
+		if ( $include_braid ) {
+			$args['require_google'] = true;
+		} else {
+			$args['require_gclid'] = true;
+		}
 
 		$this->send_headers( 'google-ads-offline-conversions-' . gmdate( 'Ymd-His' ) . '.csv' );
 
 		$this->write_timezone_row();
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped for the CSV context by cidrc_esc_csv_row().
-		echo cidrc_esc_csv_row( array( 'Google Click ID', 'GBRAID', 'WBRAID', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency' ) );
+		echo cidrc_esc_csv_row( CIDRC_Export_Rows::google_header( $include_braid ) );
 
 		$this->stream(
 			$args,
-			static function ( $row ) {
-				return array(
-					$row['gclid'],
-					$row['gbraid'],
-					$row['wbraid'],
-					$row['conversion_name'],
-					cidrc_format_conversion_time( $row['created_at'] ),
-					number_format( (float) $row['conversion_value'], 2, '.', '' ),
-					$row['currency'],
-				);
+			static function ( $row ) use ( $include_braid ) {
+				return CIDRC_Export_Rows::google_row( $row, $include_braid );
 			}
 		);
 
@@ -191,20 +190,9 @@ class CIDRC_Export {
 
 		$this->write_timezone_row();
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped for the CSV context by cidrc_esc_csv_row().
-		echo cidrc_esc_csv_row( array( 'Microsoft Click ID', 'Conversion Name', 'Conversion Time', 'Conversion Value', 'Conversion Currency' ) );
+		echo cidrc_esc_csv_row( CIDRC_Export_Rows::microsoft_header() );
 
-		$this->stream(
-			$args,
-			static function ( $row ) {
-				return array(
-					$row['msclkid'],
-					$row['conversion_name'],
-					cidrc_format_conversion_time( $row['created_at'] ),
-					number_format( (float) $row['conversion_value'], 2, '.', '' ),
-					$row['currency'],
-				);
-			}
-		);
+		$this->stream( $args, array( 'CIDRC_Export_Rows', 'microsoft_row' ) );
 
 		exit;
 	}
@@ -212,48 +200,25 @@ class CIDRC_Export {
 	/**
 	 * Exports the full submission log.
 	 *
+	 * The extended attribution columns are added when the setting is on, or when
+	 * any exported row has extended data, so that switching the setting off later
+	 * does not hide what was recorded.
+	 *
 	 * @return void
 	 */
 	public function export_full() {
-		$args = $this->guard();
+		$args     = $this->guard();
+		$extended = cidrc_extended_enabled() || CIDRC_Log::has_extended_rows( $args );
 
 		$this->send_headers( 'click-id-capture-log-' . gmdate( 'Ymd-His' ) . '.csv' );
 
-		$columns = array(
-			'id',
-			'created_at',
-			'form_id',
-			'form_title',
-			'gclid',
-			'gbraid',
-			'wbraid',
-			'msclkid',
-			'fbclid',
-			'utm_source',
-			'utm_medium',
-			'utm_campaign',
-			'landing_page',
-			'referrer',
-			'email_hash',
-			'phone_hash',
-			'conversion_name',
-			'conversion_value',
-			'currency',
-		);
-
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped for the CSV context by cidrc_esc_csv_row().
-		echo cidrc_esc_csv_row( $columns );
+		echo cidrc_esc_csv_row( CIDRC_Export_Rows::full_columns( $extended ) );
 
 		$this->stream(
 			$args,
-			static function ( $row ) use ( $columns ) {
-				$fields = array();
-
-				foreach ( $columns as $column ) {
-					$fields[] = isset( $row[ $column ] ) ? $row[ $column ] : '';
-				}
-
-				return $fields;
+			static function ( $row ) use ( $extended ) {
+				return CIDRC_Export_Rows::full_row( $row, $extended );
 			}
 		);
 

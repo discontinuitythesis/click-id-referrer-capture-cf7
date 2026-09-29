@@ -47,7 +47,13 @@ class CIDRC_CF7 {
 			$fields = array();
 		}
 
-		foreach ( array_keys( cidrc_hidden_fields() ) as $name ) {
+		$names = array_keys( cidrc_hidden_fields() );
+
+		if ( cidrc_extended_enabled() ) {
+			$names = array_merge( $names, array_keys( cidrc_extended_fields() ) );
+		}
+
+		foreach ( $names as $name ) {
 			$fields[ $name ] = '';
 		}
 
@@ -150,8 +156,13 @@ class CIDRC_CF7 {
 	/**
 	 * Rebuilds a values array from the posted hidden fields.
 	 *
+	 * The returned array also carries a consent key holding ad_user_data and
+	 * ad_personalization, each Granted, Denied or empty, with the consent fallback
+	 * setting already applied to empty values. With extended attribution on it
+	 * also carries an extended key, see cidrc_extended_from_posted().
+	 *
 	 * @param array $posted Posted data.
-	 * @return array Values in the shape returned by cidrc_get_values().
+	 * @return array Values in the shape returned by cidrc_get_values(), plus consent.
 	 */
 	public function values_from_posted( array $posted ) {
 		$values = array(
@@ -161,6 +172,10 @@ class CIDRC_CF7 {
 			'first_landing_page' => '',
 			'first_seen'         => '',
 			'last_seen'          => '',
+			'consent'            => array(
+				'ad_user_data'       => '',
+				'ad_personalization' => '',
+			),
 		);
 
 		foreach ( cidrc_hidden_fields() as $field => $key ) {
@@ -169,6 +184,11 @@ class CIDRC_CF7 {
 			}
 
 			$raw = is_array( $posted[ $field ] ) ? reset( $posted[ $field ] ) : $posted[ $field ];
+
+			if ( isset( $values['consent'][ $key ] ) ) {
+				$values['consent'][ $key ] = cidrc_normalise_consent( cidrc_clean_value( $raw, 20 ) );
+				continue;
+			}
 
 			if ( in_array( $key, array( 'first_referrer', 'first_landing_page' ), true ) ) {
 				$raw = cidrc_clean_url_value( $raw );
@@ -207,6 +227,19 @@ class CIDRC_CF7 {
 			$values['first'][ $key ] = $raw;
 		}
 
+		// Only used when the page gave no Google Consent Mode signal at submission.
+		$fallback = cidrc_normalise_consent( cidrc_get_setting( 'consent_fallback', '' ) );
+
+		foreach ( $values['consent'] as $key => $value ) {
+			if ( '' === $value ) {
+				$values['consent'][ $key ] = $fallback;
+			}
+		}
+
+		if ( cidrc_extended_enabled() ) {
+			$values['extended'] = cidrc_extended_from_posted( $posted );
+		}
+
 		return $values;
 	}
 
@@ -237,25 +270,32 @@ class CIDRC_CF7 {
 		};
 
 		$row = array(
-			'created_at'       => gmdate( 'Y-m-d H:i:s' ),
-			'form_id'          => $form_id,
-			'form_title'       => $form_title,
-			'gclid'            => $pick( 'gclid' ),
-			'gbraid'           => $pick( 'gbraid' ),
-			'wbraid'           => $pick( 'wbraid' ),
-			'msclkid'          => $pick( 'msclkid' ),
-			'fbclid'           => $pick( 'fbclid' ),
-			'utm_source'       => $pick( 'utm_source' ),
-			'utm_medium'       => $pick( 'utm_medium' ),
-			'utm_campaign'     => $pick( 'utm_campaign' ),
-			'landing_page'     => $values['first_landing_page'],
-			'referrer'         => $values['first_referrer'],
-			'email_hash'       => cidrc_hash_email( $identity['email'] ),
-			'phone_hash'       => cidrc_hash_phone( $identity['phone'] ),
-			'conversion_name'  => $conversion['name'],
-			'conversion_value' => $conversion['value'],
-			'currency'         => $conversion['currency'],
+			'created_at'         => gmdate( 'Y-m-d H:i:s' ),
+			'form_id'            => $form_id,
+			'form_title'         => $form_title,
+			'gclid'              => $pick( 'gclid' ),
+			'gbraid'             => $pick( 'gbraid' ),
+			'wbraid'             => $pick( 'wbraid' ),
+			'msclkid'            => $pick( 'msclkid' ),
+			'fbclid'             => $pick( 'fbclid' ),
+			'utm_source'         => $pick( 'utm_source' ),
+			'utm_medium'         => $pick( 'utm_medium' ),
+			'utm_campaign'       => $pick( 'utm_campaign' ),
+			'landing_page'       => $values['first_landing_page'],
+			'referrer'           => $values['first_referrer'],
+			'email_hash'         => cidrc_hash_email( $identity['email'] ),
+			'phone_hash'         => cidrc_hash_phone( $identity['phone'] ),
+			'conversion_name'    => $conversion['name'],
+			'conversion_value'   => $conversion['value'],
+			'currency'           => $conversion['currency'],
+			'ad_user_data'       => $values['consent']['ad_user_data'],
+			'ad_personalization' => $values['consent']['ad_personalization'],
 		);
+
+		// Left out altogether when there is nothing, so the row matches 1.1.0.
+		if ( ! empty( $values['extended'] ) ) {
+			$row['extended'] = wp_json_encode( $values['extended'] );
+		}
 
 		/**
 		 * Filters whether a submission is written to the log.
@@ -266,9 +306,8 @@ class CIDRC_CF7 {
 		 */
 		$should_log = (bool) apply_filters( 'cidrc_should_log', (bool) cidrc_get_setting( 'keep_log', 1 ), $row, $contact_form );
 
-		if ( $should_log ) {
-			CIDRC_Log::insert( $row );
-		}
+		// The log row identifier becomes the order ID in the webhook payload.
+		$row['id'] = $should_log ? CIDRC_Log::insert( $row ) : 0;
 
 		$webhook = new CIDRC_Webhook();
 		$webhook->send( $row, $identity );

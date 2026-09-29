@@ -24,6 +24,14 @@ class CIDRC_List_Table extends WP_List_Table {
 	protected $filters = array();
 
 	/**
+	 * Whether to show the Attribution column: the setting is on, or a row on this
+	 * page has extended data.
+	 *
+	 * @var bool
+	 */
+	protected $show_attribution = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param array $filters Filter arguments.
@@ -46,14 +54,25 @@ class CIDRC_List_Table extends WP_List_Table {
 	 * @return array Column map.
 	 */
 	public function get_columns() {
-		return array(
+		$columns = array(
 			'created_at'   => __( 'Date', 'click-id-referrer-capture-cf7' ),
 			'form_title'   => __( 'Form', 'click-id-referrer-capture-cf7' ),
 			'click_id'     => __( 'Click ID', 'click-id-referrer-capture-cf7' ),
+			'consent'      => __( 'Consent', 'click-id-referrer-capture-cf7' ),
 			'source'       => __( 'Source / medium / campaign', 'click-id-referrer-capture-cf7' ),
-			'landing_page' => __( 'Landing page', 'click-id-referrer-capture-cf7' ),
-			'referrer'     => __( 'Referrer', 'click-id-referrer-capture-cf7' ),
-			'email_hash'   => __( 'Email hash', 'click-id-referrer-capture-cf7' ),
+		);
+
+		if ( $this->show_attribution ) {
+			$columns['attribution'] = __( 'Attribution', 'click-id-referrer-capture-cf7' );
+		}
+
+		return array_merge(
+			$columns,
+			array(
+				'landing_page' => __( 'Landing page', 'click-id-referrer-capture-cf7' ),
+				'referrer'     => __( 'Referrer', 'click-id-referrer-capture-cf7' ),
+				'email_hash'   => __( 'Email hash', 'click-id-referrer-capture-cf7' ),
+			)
 		);
 	}
 
@@ -73,7 +92,16 @@ class CIDRC_List_Table extends WP_List_Table {
 			)
 		);
 
-		$this->items           = CIDRC_Log::get_rows( $args );
+		$this->items            = CIDRC_Log::get_rows( $args );
+		$this->show_attribution = cidrc_extended_enabled();
+
+		foreach ( $this->items as $item ) {
+			if ( ! empty( $item['extended'] ) ) {
+				$this->show_attribution = true;
+				break;
+			}
+		}
+
 		$this->_column_headers = array( $this->get_columns(), array(), array() );
 
 		$total = CIDRC_Log::count_rows( $this->filters );
@@ -163,6 +191,44 @@ class CIDRC_List_Table extends WP_List_Table {
 	}
 
 	/**
+	 * Renders the Google consent column, for example "Data: Granted · Pers.: Denied".
+	 *
+	 * @param array $item Row data.
+	 * @return string Cell contents.
+	 */
+	public function column_consent( $item ) {
+		$data = cidrc_normalise_consent( isset( $item['ad_user_data'] ) ? $item['ad_user_data'] : '' );
+		$pers = cidrc_normalise_consent( isset( $item['ad_personalization'] ) ? $item['ad_personalization'] : '' );
+
+		if ( '' === $data && '' === $pers ) {
+			return esc_html__( 'Unspecified', 'click-id-referrer-capture-cf7' );
+		}
+
+		/* translators: 1: ad user data consent, 2: ad personalisation consent. Each is Granted, Denied or Unspecified. */
+		$text = sprintf( __( 'Data: %1$s · Pers.: %2$s', 'click-id-referrer-capture-cf7' ), $this->consent_label( $data ), $this->consent_label( $pers ) );
+
+		return esc_html( $text );
+	}
+
+	/**
+	 * Returns the display label for a stored consent value.
+	 *
+	 * @param string $value Granted, Denied or an empty string.
+	 * @return string Label.
+	 */
+	protected function consent_label( $value ) {
+		if ( 'Granted' === $value ) {
+			return __( 'Granted', 'click-id-referrer-capture-cf7' );
+		}
+
+		if ( 'Denied' === $value ) {
+			return __( 'Denied', 'click-id-referrer-capture-cf7' );
+		}
+
+		return __( 'Unspecified', 'click-id-referrer-capture-cf7' );
+	}
+
+	/**
 	 * Renders the source, medium and campaign column.
 	 *
 	 * @param array $item Row data.
@@ -176,6 +242,36 @@ class CIDRC_List_Table extends WP_List_Table {
 		}
 
 		return esc_html( implode( ' / ', $parts ) );
+	}
+
+	/**
+	 * Renders the attribution column: first and last touch channels, then the form page.
+	 *
+	 * @param array $item Row data.
+	 * @return string Cell contents.
+	 */
+	public function column_attribution( $item ) {
+		$extended = cidrc_extended_decode( isset( $item['extended'] ) ? $item['extended'] : '' );
+
+		if ( empty( $extended ) ) {
+			return esc_html__( 'None', 'click-id-referrer-capture-cf7' );
+		}
+
+		$channels = array();
+
+		foreach ( array( 'first', 'last' ) as $key ) {
+			if ( ! empty( $extended[ $key ]['channel'] ) ) {
+				$channels[] = $extended[ $key ]['channel'];
+			}
+		}
+
+		$out = esc_html( empty( $channels ) ? '-' : implode( ' → ', $channels ) );
+
+		if ( '' !== $extended['form_page'] ) {
+			$out .= '<br /><span class="cidrc-form-page" title="' . esc_attr( $extended['form_page_title'] ) . '">' . esc_html( $this->truncate( $extended['form_page'], 40 ) ) . '</span>';
+		}
+
+		return $out;
 	}
 
 	/**

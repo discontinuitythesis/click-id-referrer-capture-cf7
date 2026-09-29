@@ -1,6 +1,6 @@
 <?php
 /**
- * Submission log: table creation, inserts, queries and purging.
+ * Submission log: inserts, queries and purging. The schema is in class-cidrc-log-schema.php.
  *
  * @package ClickIdReferrerCaptureCf7
  */
@@ -10,88 +10,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Stores one row per Contact Form 7 submission that sent mail.
  */
-class CIDRC_Log {
-
-	/**
-	 * Schema version option name.
-	 *
-	 * @var string
-	 */
-	const DB_OPTION = 'cidrc_db_version';
-
-	/**
-	 * Current schema version.
-	 *
-	 * @var string
-	 */
-	const DB_VERSION = '1.0.0';
-
-	/**
-	 * Returns the fully qualified table name.
-	 *
-	 * @return string Table name.
-	 */
-	public static function table_name() {
-		global $wpdb;
-
-		return $wpdb->prefix . 'cidrc_submissions';
-	}
-
-	/**
-	 * Creates or upgrades the table when the stored schema version differs.
-	 *
-	 * @return void
-	 */
-	public static function maybe_install() {
-		if ( get_option( self::DB_OPTION ) === self::DB_VERSION ) {
-			return;
-		}
-
-		self::install();
-	}
-
-	/**
-	 * Creates the table with dbDelta.
-	 *
-	 * @return void
-	 */
-	public static function install() {
-		global $wpdb;
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-		$table   = self::table_name();
-		$collate = $wpdb->get_charset_collate();
-
-		$sql = "CREATE TABLE {$table} (
-			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-			created_at datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
-			form_id bigint(20) unsigned NOT NULL DEFAULT 0,
-			form_title varchar(191) NOT NULL DEFAULT '',
-			gclid varchar(255) NOT NULL DEFAULT '',
-			gbraid varchar(255) NOT NULL DEFAULT '',
-			wbraid varchar(255) NOT NULL DEFAULT '',
-			msclkid varchar(255) NOT NULL DEFAULT '',
-			fbclid varchar(255) NOT NULL DEFAULT '',
-			utm_source varchar(191) NOT NULL DEFAULT '',
-			utm_medium varchar(191) NOT NULL DEFAULT '',
-			utm_campaign varchar(191) NOT NULL DEFAULT '',
-			landing_page varchar(500) NOT NULL DEFAULT '',
-			referrer varchar(500) NOT NULL DEFAULT '',
-			email_hash char(64) NOT NULL DEFAULT '',
-			phone_hash char(64) NOT NULL DEFAULT '',
-			conversion_name varchar(191) NOT NULL DEFAULT '',
-			conversion_value decimal(18,2) NOT NULL DEFAULT 0.00,
-			currency char(3) NOT NULL DEFAULT '',
-			PRIMARY KEY  (id),
-			KEY created_at (created_at),
-			KEY form_id (form_id)
-		) {$collate};";
-
-		dbDelta( $sql );
-
-		update_option( self::DB_OPTION, self::DB_VERSION, false );
-	}
+class CIDRC_Log extends CIDRC_Log_Schema {
 
 	/**
 	 * Inserts one submission row.
@@ -103,40 +22,93 @@ class CIDRC_Log {
 		global $wpdb;
 
 		$defaults = array(
-			'created_at'       => gmdate( 'Y-m-d H:i:s' ),
-			'form_id'          => 0,
-			'form_title'       => '',
-			'gclid'            => '',
-			'gbraid'           => '',
-			'wbraid'           => '',
-			'msclkid'          => '',
-			'fbclid'           => '',
-			'utm_source'       => '',
-			'utm_medium'       => '',
-			'utm_campaign'     => '',
-			'landing_page'     => '',
-			'referrer'         => '',
-			'email_hash'       => '',
-			'phone_hash'       => '',
-			'conversion_name'  => '',
-			'conversion_value' => 0,
-			'currency'         => '',
+			'created_at'         => gmdate( 'Y-m-d H:i:s' ),
+			'form_id'            => 0,
+			'form_title'         => '',
+			'gclid'              => '',
+			'gbraid'             => '',
+			'wbraid'             => '',
+			'msclkid'            => '',
+			'fbclid'             => '',
+			'utm_source'         => '',
+			'utm_medium'         => '',
+			'utm_campaign'       => '',
+			'landing_page'       => '',
+			'referrer'           => '',
+			'email_hash'         => '',
+			'phone_hash'         => '',
+			'conversion_name'    => '',
+			'conversion_value'   => 0,
+			'currency'           => '',
+			'ad_user_data'       => '',
+			'ad_personalization' => '',
+			'extended'           => null,
 		);
 
 		$row = array_merge( $defaults, array_intersect_key( $row, $defaults ) );
 
-		$formats = array( '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%f', '%s' );
+		// Without extended data the column is left out, so the insert is the same
+		// as in 1.1.0 and does not depend on the 1.2.0 column existing.
+		if ( null === $row['extended'] || '' === $row['extended'] ) {
+			unset( $row['extended'] );
+		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-		$inserted = $wpdb->insert( self::table_name(), $row, $formats );
+		// The newer columns may be missing if the schema upgrade has not been able
+		// to run yet. Keep the lead rather than lose it: retry without the 1.2.0
+		// column, then without the 1.1.0 columns as well.
+		$attempts = array(
+			$row,
+			array_diff_key( $row, array_flip( self::EXTENDED_COLUMNS ) ),
+			array_diff_key( $row, array_flip( array_merge( self::CONSENT_COLUMNS, self::EXTENDED_COLUMNS ) ) ),
+		);
+		$tried    = array();
 
-		return $inserted ? (int) $wpdb->insert_id : 0;
+		foreach ( $attempts as $attempt ) {
+			$key = implode( ',', array_keys( $attempt ) );
+
+			if ( isset( $tried[ $key ] ) ) {
+				continue;
+			}
+
+			$tried[ $key ] = true;
+
+			// One format per column, in the order of the columns.
+			$formats = array();
+
+			foreach ( array_keys( $attempt ) as $column ) {
+				$formats[] = self::FORMATS[ $column ];
+			}
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+			if ( $wpdb->insert( self::table_name(), $attempt, $formats ) ) {
+				return (int) $wpdb->insert_id;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Reports whether any row matching the filters holds extended attribution data.
+	 *
+	 * @param array $args Filters.
+	 * @return bool True when at least one row has extended data.
+	 */
+	public static function has_extended_rows( array $args = array() ) {
+		if ( ! self::has_columns( self::EXTENDED_COLUMNS ) ) {
+			return false;
+		}
+
+		$args['require_extended'] = true;
+
+		return self::count_rows( $args ) > 0;
 	}
 
 	/**
 	 * Builds the WHERE clause and arguments for the supplied filters.
 	 *
-	 * @param array $args Filter arguments: form_id, date_from, date_to.
+	 * @param array $args Filter arguments: form_id, date_from, date_to, require_gclid,
+	 *                    require_google, require_microsoft and require_extended.
 	 * @return array Array with the sql and args keys.
 	 */
 	protected static function build_where( array $args ) {
@@ -158,12 +130,20 @@ class CIDRC_Log {
 			$vals[] = $args['date_to'] . ' 23:59:59';
 		}
 
+		if ( ! empty( $args['require_gclid'] ) ) {
+			$sql .= " AND gclid <> ''";
+		}
+
 		if ( ! empty( $args['require_google'] ) ) {
 			$sql .= " AND ( gclid <> '' OR gbraid <> '' OR wbraid <> '' )";
 		}
 
 		if ( ! empty( $args['require_microsoft'] ) ) {
 			$sql .= " AND msclkid <> ''";
+		}
+
+		if ( ! empty( $args['require_extended'] ) ) {
+			$sql .= " AND extended IS NOT NULL AND extended <> ''";
 		}
 
 		return array(
@@ -191,7 +171,7 @@ class CIDRC_Log {
 		$query = 'SELECT * FROM %i' . $where['sql'] . ' ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d';
 		$vals  = array_merge( array( $table ), $where['args'], array( $per_page, $offset ) );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom plugin table; the SQL contains only literal fragments and placeholders, every value goes through $wpdb->prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Only static clauses and placeholders are assembled above; values and table identifiers are prepared here.
 		$rows = $wpdb->get_results( $wpdb->prepare( $query, $vals ), ARRAY_A );
 
 		return is_array( $rows ) ? $rows : array();
@@ -210,7 +190,7 @@ class CIDRC_Log {
 		$query = 'SELECT COUNT(*) FROM %i' . $where['sql'];
 		$vals  = array_merge( array( self::table_name() ), $where['args'] );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom plugin table; the SQL contains only literal fragments and placeholders, every value goes through $wpdb->prepare().
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Only static clauses and placeholders are assembled above; values and table identifiers are prepared here.
 		$count = $wpdb->get_var( $wpdb->prepare( $query, $vals ) );
 
 		return (int) $count;
